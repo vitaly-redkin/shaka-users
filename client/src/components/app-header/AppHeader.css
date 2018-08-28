@@ -1,0 +1,56 @@
+.app-header
+{
+    background-color: #222;
+}
+
+.app-header-brand
+{
+    width: 300px;
+    flex-direction: row;
+    display: flex !important;
+}
+
+.app-header-logo
+{
+    width: 75px;
+    height: 54px;
+}
+
+.app-header-title
+{
+    color: white;
+}
+
+.app-header-right
+{
+    width: 240px;
+}
+
+.app-header-right div
+{
+    text-align: right;
+    width: 100%;
+}
+
+.nav-link
+{
+    color: white;
+    color: white;
+    font-size: 1.25rem;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    margin-left: 1rem !important;
+    margin-right: 1rem !important;
+}
+
+a.nav-link:hover
+{
+    color: white;
+    border-bottom: 4px solid #fc5d51;
+}
+
+.app-header-active-link
+{
+    border-bottom: 4px solid #fc5d51;
+}
+

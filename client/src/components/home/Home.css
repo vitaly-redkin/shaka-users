@@ -1,0 +1,45 @@
+.home-container
+{
+  max-width: 800px !important;
+}
+
+.home-currency-amount-warning
+{
+  color: red;
+}
+
+.home-table-header
+{
+  background-color: #888888;
+  color: white;
+  font-weight: bold;
+  font-size: 1rem;
+}
+
+.home-table-home-table-container div
+{
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+.home-table-row-even
+{
+  background-color: #eeeeee;
+}
+
+.home-table-row-even,
+.home-table-row-odd
+{
+  align-items: center;
+}
+
+.home-table-currency
+{
+  font-weight: bold;
+}
+
+.home-table-button
+{
+  width: 100px;
+  color: black!important;
+}
