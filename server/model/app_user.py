@@ -100,7 +100,8 @@ class AppUser:
             {
                 'updated_on': datetime.datetime.utcnow(),
                 'first_name': first_name,
-                'last_name': last_name
+                'last_name': last_name,
+                'role': role
             }
         if password_hash != None:
             update_dict['password_hash'] = password_hash
@@ -113,7 +114,7 @@ class AppUser:
                 '$set': update_dict
             }
         )
-        return None if doc is None or doc.matched_count == 0 else {'email': email}
+        return None if doc is None or doc.matched_count == 0 else {'success': True}
 
     @staticmethod
     def delete(email):
@@ -128,4 +129,4 @@ class AppUser:
                 '_id': email
             }
         )
-        return None if doc is None or doc.deleted_count == 0 else {'email': email}
+        return None if doc is None or doc.deleted_count == 0 else {'success': True}

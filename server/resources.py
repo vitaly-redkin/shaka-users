@@ -9,6 +9,7 @@ from util import dict_get
 from model.app_user import AppUser
 from model.revoked_token import RevokedToken
 
+
 def _error(message):
     """
     Returns dictionary with error
@@ -17,6 +18,7 @@ def _error(message):
     :return: dictionary with error
     """
     return {'_error': message}
+
 
 def _ok():
     """
@@ -27,6 +29,7 @@ def _ok():
     return {
         'success': True
     }
+
 
 def _ok_with_new_tokens(email, role):
     """
@@ -42,6 +45,7 @@ def _ok_with_new_tokens(email, role):
     result['refresh_token'] = create_refresh_token(identity=identity)
     return result
 
+
 def _generate_hash(password):
     """
     Generates password hash
@@ -50,6 +54,7 @@ def _generate_hash(password):
     :return: password hash
     """
     return sha256.hash(password)
+
 
 def _verify_hash(password, password_hash):
     """
@@ -74,16 +79,21 @@ def _is_admin():
 
 def _admin_only(fn):
     """
-    A decorator to protect "amin-only" endpoints.
+    A decorator to protect "admin-only" endpoints.
 
     If you decorate an endpoint with this, it will ensure that the requester
     is an admin.
-
-    See also: :func:`~flask_jwt_extended.fresh_jwt_required`
     """
 
     @wraps(fn)
     def wrapper(*args, **kwargs):
+        """
+        Decorator function. Raises '403 exception' if user is nt an admin
+
+        :param args: not used
+        :param kwargs: not used
+        :return: just what the wrapped function returns
+        """
         if not _is_admin():
             abort(403, message='Only admins can do this')
 
@@ -96,6 +106,7 @@ class UserRegistration(Resource):
     """
     Class to handle user registration requests
     """
+
     def post(self):
         """
         Registers new user
@@ -129,6 +140,7 @@ class UserLogin(Resource):
     """
     Class to handle user login requests
     """
+
     def post(self):
         """
         Checks if user exists and password matches.
@@ -157,6 +169,7 @@ class BaseUserLogoutAccess(Resource):
     """
     Base class for resources which revoke user token
     """
+
     def revoke_token(self, operation):
         """
         Revokes user access token
@@ -176,6 +189,7 @@ class UserLogoutAccess(BaseUserLogoutAccess):
     """
     Class to handle logout requests
     """
+
     @jwt_required
     def post(self):
         """
@@ -183,13 +197,14 @@ class UserLogoutAccess(BaseUserLogoutAccess):
 
         :return: error or success dictionary
         """
-        return super.revoke_token('logout')
+        return super().revoke_token('logout')
 
 
-class UserLogoutRefresh(Resource):
+class UserLogoutRefresh(BaseUserLogoutAccess):
     """
     Class to handle logout refresh requests
     """
+
     @jwt_refresh_token_required
     def post(self):
         """
@@ -197,13 +212,14 @@ class UserLogoutRefresh(Resource):
 
         :return: error or success dictionary
         """
-        return super.revoke_token('logout refresh')
+        return super().revoke_token('logout refresh')
 
 
 class TokenRefresh(Resource):
     """
     Class to handle token refresh request
     """
+
     @jwt_refresh_token_required
     def post(self):
         """
@@ -211,15 +227,21 @@ class TokenRefresh(Resource):
 
         :return: dictionary with new access token
         """
-        current_user = get_jwt_identity()
-        access_token = create_access_token(identity = current_user)
-        return {'access_token': access_token}
+        email = get_jwt_identity()
+        user = AppUser.get_by_email(email)
+        if user is not None:
+            identity = {'email': email, 'role': user['role']}
+            access_token = create_access_token(identity=identity)
+            return {'access_token': access_token}
+        else:
+            return self._check(user, email)
 
 
 class Users(Resource):
     """
     Class to handle "get all users" request
     """
+
     @jwt_required
     @_admin_only
     def get(self):
@@ -228,9 +250,6 @@ class Users(Resource):
 
         :return: list of all users
         """
-        if not _is_admin():
-            abort(404, message='Only admins can do this')
-
         return AppUser.get_all()
 
     @jwt_required
@@ -260,10 +279,12 @@ class Users(Resource):
         except Exception as e:
             return _error('Error during creating a new user: %s' % e), 500
 
+
 class User(Resource):
     """
     Class to handle requests for individual users
     """
+
     @jwt_required
     @_admin_only
     def get(self, email):
@@ -274,6 +295,8 @@ class User(Resource):
         :return: details for the user with the given e-mail or HTTP 404 if not found
         """
         result = AppUser.get_by_email(email)
+        if result is not None:
+            del result['password_hash']
         return self._check(result, email)
 
     @jwt_required
@@ -328,6 +351,7 @@ class User(Resource):
         else:
             error_message = 'No user with a-mail=%s exists' % email
             abort(404, message=error_message)
+
 
 class HelloWorld(Resource):
     """

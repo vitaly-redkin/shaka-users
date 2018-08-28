@@ -15,12 +15,18 @@ class RevokedToken:
 
         :param string jti: JWT token identified (will be used as a primary key)
         """
-        MongoUtil.revoked_token_collection().insert_one(
+        doc = MongoUtil.revoked_token_collection().find_one(
             {
-                '_id': jti,
-                'created_on': datetime.datetime.utcnow()
+                '_id': jti
             }
         )
+        if doc is None:
+            MongoUtil.revoked_token_collection().insert_one(
+                {
+                    '_id': jti,
+                    'created_on': datetime.datetime.utcnow()
+                }
+            )
 
     @staticmethod
     def is_blacklisted(jti):
@@ -30,9 +36,9 @@ class RevokedToken:
         :param string jti: JWT token identified (will be used as a primary key)
         :return: true if token has been blacklisted or false otherwise
         """
-        doc = MongoUtil.user_collection().find_one(
+        count = MongoUtil.revoked_token_collection().count(
             {
                 '_id': jti
             }
         )
-        return doc is not None
+        return count > 0
