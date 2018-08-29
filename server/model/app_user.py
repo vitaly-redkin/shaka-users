@@ -32,6 +32,8 @@ class AppUser:
             }
         )
 
+        return AppUser.get_by_email(email)
+
     @staticmethod
     def get_all():
         """

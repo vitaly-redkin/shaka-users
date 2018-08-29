@@ -5,9 +5,9 @@
 import { UserModel } from '../model/UserModel';
 import { AuthTokenModel } from '../model/AuthTokenModel';
 
-export class LoginService {
+export class UserService {
     /**
-     * Tries to log in.
+     * Logs in.
      * 
      * @param email User E-mail
      * @param password User password
@@ -25,9 +25,87 @@ export class LoginService {
             '/login',
             'POST',
             data,
+            null,
             onSuccess,
             onError
         );
+    }
+
+    /**
+     * Registers a new user.
+     * 
+     * @param email User E-mail
+     * @param password User password
+     * @param firstName User first name
+     * @param lastName User last name
+     * @param onSuccess function to call on success
+     * @param onError function to call on error
+     */
+    public register(
+        email: string,
+        password: string,
+        firstName: string,
+        lastName: string,
+        onSuccess: Function,
+        onError: Function
+    ): void {
+        const data: IRegisterPayload = {
+            email: email, password: password, firstName: firstName, lastName: lastName};
+        this.callApi<IRegisterPayload, ILoginResult>(
+            '/registration',
+            'POST',
+            data,
+            null,
+            onSuccess,
+            onError
+        );
+    }
+
+    /**
+     * Logs out.
+     * 
+     * @param authTokens Authentication tokens
+     * @param onSuccess function to call on success
+     * @param onError function to call on error
+     */
+    public logout(
+        authTokens: AuthTokenModel,
+        onSuccess: Function,
+        onError: Function
+    ): void {
+        this.callApi<ILoginPayload, ILoginResult>(
+            '/logout/access',
+            'POST',
+            null,
+            authTokens.accessToken,
+            onSuccess,
+            onError
+        );
+
+        this.callApi<ILoginPayload, ILoginResult>(
+            '/logout/refresh',
+            'POST',
+            null,
+            authTokens.refreshToken,
+            onSuccess,
+            onError
+        );
+    }
+
+    //tslint:disable
+    private addAuthHeaders(
+        authTokens: AuthTokenModel | string | null,
+        headers: any
+    ): any {
+        //tslint:enable
+        if (authTokens === null) {
+            return headers;
+        } else {
+            const token: string = 
+                (typeof authTokens === 'string' ? authTokens : authTokens.refreshToken);
+
+            return {...headers, Authorization: `Bearer ${token}`};
+        }
     }
 
     /**
@@ -36,6 +114,7 @@ export class LoginService {
      * @param endpoint API endpoint to call
      * @param method HTTP method to use (GET, POST, PUT, DELETE)
      * @param data payload object
+     * @param authTokens - either both access and refresh tokens, or only one token, or null
      * @param onSuccess function to call on success
      * @param onError function to call on error
      */
@@ -43,10 +122,16 @@ export class LoginService {
         endpoint: string,
         method: string,
         data: TPayload | null,
+        authTokens: AuthTokenModel | string | null,
         onSuccess: Function,
         onError: Function
     ): void {
         const url: string = `${this.getApiHost()}${endpoint}`;
+        //tslint:disable
+        const headers: any = this.addAuthHeaders(
+            authTokens,
+            {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'});
+        //tslint:enable
         try {
             fetch(
                 url,
@@ -54,7 +139,7 @@ export class LoginService {
                     method: method,
                     mode: 'cors',
                     body: (data === null ? null : JSON.stringify(data)),
-                    headers: {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'}
+                    headers: headers
                 }
             )
             .then(async (response) =>  { 
@@ -116,6 +201,16 @@ interface ILoginPayload {
 export interface ILoginResult {
     authTokens: AuthTokenModel;
     user: UserModel;
+}
+
+/**
+ * Interface for the register payload objects.
+ */
+interface IRegisterPayload {
+    email: string;
+    password: string;
+    firstName: string;
+    lastName: string;
 }
 
 /**

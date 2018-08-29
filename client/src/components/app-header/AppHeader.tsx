@@ -11,13 +11,16 @@ import { actionCreators } from '../../store/.';
 import { IApplicationState } from '../../store';
 import { AppRoutes } from '../../util/AppRoutes';
 import { UserModel, RoleEnum  } from '../../model/UserModel';
+import { AuthTokenModel  } from '../../model/AuthTokenModel';
 
 import './AppHeader.css';
 import logo from '../../img/logo.png';
+import { UserService } from '../../service/UserService';
 
 // Component own properties interface
 interface IAppHeaderOwnProps {
   loggedUser: UserModel | undefined;
+  authTokens: AuthTokenModel;
 }
 
 // Component properties type
@@ -108,18 +111,30 @@ class AppHeader extends React.Component<AppHeaderProps, IAppHeaderState> {
   private logout = (e: React.MouseEvent): void => {
     e.preventDefault();
 
+    new UserService().logout(this.props.authTokens, () => null, this.onServiceError);
     // TO DO: call logout API
     this.props.clearUser();
     this.props.clearAuthTokens();
     
     this.props.history.push(AppRoutes.Login);
   }
+
+  /**
+   * Handles service event.
+   * 
+   * @param error Error message
+   */
+  private onServiceError = (error: Error) => {
+    console.log(error.stack);
+  }
+
 }
 
 // Redux mapStateToProps function
 function mapStateToProps(state: IApplicationState): IAppHeaderOwnProps {
   return {
     loggedUser: state.user.loggedUser,
+    authTokens: state.authTokens.authTokens
   };
 }
 
