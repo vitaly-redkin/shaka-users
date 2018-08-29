@@ -41,10 +41,26 @@ def _ok_with_new_tokens(email, role):
     """
     identity = {'email': email, 'role': role}
     result = _ok()
-    result['access_token'] = create_access_token(identity=identity)
-    result['refresh_token'] = create_refresh_token(identity=identity)
+    authTokens = {
+        'accessToken': create_access_token(identity=identity),
+        'refreshToken': create_refresh_token(identity=identity)
+    }
+    result['authTokens'] = authTokens
     return result
 
+
+def _ok_with_tokens_and_user(user):
+    """
+    Generates new access tokens and composes a dictionary with them and success flag.
+    Adds user object (save for the hashed password) to the returned dictionary.
+
+    :param user: User object to generate access tokens and to return
+    :return: dictionary with success flag, access tokens and user
+    """
+    result = _ok_with_new_tokens(user['email'], user['role'])
+    del user['passwordHash']
+    result['user'] = user
+    return result
 
 def _generate_hash(password):
     """
@@ -121,16 +137,16 @@ class UserRegistration(Resource):
                 return _error('User  with email %s already exists' % email)
 
             password = dict_get(json_data, 'password')
-            password_hash = _generate_hash(password)
-            first_name = dict_get(json_data, 'first_name')
-            last_name = dict_get(json_data, 'last_name')
+            passwordHash = _generate_hash(password)
+            firstName = dict_get(json_data, 'firstName')
+            lastName = dict_get(json_data, 'lastName')
 
             # The very first registered user is an admin
             userCount = AppUser.get_count()
             role = 'ADMIN' if userCount == 0 else 'USER'
 
-            user = AppUser.create(email, password_hash, first_name, last_name, role)
-            return _ok_with_new_tokens(email, role)
+            user = AppUser.create(email, passwordHash, firstName, lastName, role)
+            return _ok_with_tokens_and_user(user)
         except Exception as e:
             print(e)
             return _error('Error adding user: %s' % e), 500
@@ -154,11 +170,8 @@ class UserLogin(Resource):
             password = dict_get(json_data, 'password')
 
             user = AppUser.get_by_email(email)
-            if user is not None and _verify_hash(password, user['password_hash']):
-                result = _ok_with_new_tokens(email, user['role'])
-                del user['password_hash']
-                result['user'] = user
-                return result
+            if user is not None and _verify_hash(password, user['passwordHash']):
+                return _ok_with_tokens_and_user(user)
             else:
                 return _error('Invalid email/password')
         except Exception as e:
@@ -232,7 +245,7 @@ class TokenRefresh(Resource):
         if user is not None:
             identity = {'email': email, 'role': user['role']}
             access_token = create_access_token(identity=identity)
-            return {'access_token': access_token}
+            return {'accessToken': access_token}
         else:
             return self._check(user, email)
 
@@ -268,12 +281,12 @@ class Users(Resource):
                 return _error('User  with email %s already exists' % email)
 
             password = dict_get(json_data, 'password')
-            password_hash = _generate_hash(password)
-            first_name = dict_get(json_data, 'first_name')
-            last_name = dict_get(json_data, 'last_name')
+            passwordHash = _generate_hash(password)
+            firstName = dict_get(json_data, 'firstName')
+            lastName = dict_get(json_data, 'lastName')
             role = dict_get(json_data, 'role')
 
-            AppUser.create(email, password_hash, first_name, last_name, role)
+            AppUser.create(email, passwordHash, firstName, lastName, role)
 
             return _ok()
         except Exception as e:
@@ -311,12 +324,12 @@ class User(Resource):
             json_data = request.get_json(force=True)
 
             password = dict_get(json_data, 'password')
-            password_hash = _generate_hash(password)
-            first_name = dict_get(json_data, 'first_name')
-            last_name = dict_get(json_data, 'last_name')
+            passwordHash = _generate_hash(password)
+            firstName = dict_get(json_data, 'firstName')
+            lastName = dict_get(json_data, 'lastName')
             role = dict_get(json_data, 'role')
 
-            result = AppUser.update(email, password_hash, first_name, last_name, role)
+            result = AppUser.update(email, passwordHash, firstName, lastName, role)
 
             return self._check(result, email)
         except Exception as e:

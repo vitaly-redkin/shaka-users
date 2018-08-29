@@ -9,26 +9,26 @@ class AppUser:
     """
 
     @staticmethod
-    def create(email, password_hash, first_name, last_name, role):
+    def create(email, passwordHash, firstName, lastName, role):
         """
         Creates new user.
 
         :param string email: User e-mail (will also serve as a primary key)
-        :param string password_hash: User password hash
-        :param string first_name: User first name
-        :param string last_name: User last name
+        :param string passwordHash: User password hash
+        :param string firstName: User first name
+        :param string lastName: User last name
         :param string role: ADMIN or USER
         """
         MongoUtil.user_collection().insert_one(
             {
                 '_id': email,
                 'email': email,
-                'password_hash': password_hash,
-                'first_name': first_name,
-                'last_name': last_name,
+                'passwordHash': passwordHash,
+                'firstName': firstName,
+                'lastName': lastName,
                 'role': role,
-                'created_on': datetime.datetime.utcnow(),
-                'updated_on': datetime.datetime.utcnow()
+                'createdOn': datetime.datetime.utcnow(),
+                'updatedOn': datetime.datetime.utcnow()
             }
         )
 
@@ -44,8 +44,8 @@ class AppUser:
             },
             {
                 'email': 1,
-                'first_name': 1,
-                'last_name': 1,
+                'firstName': 1,
+                'lastName': 1,
                 'role': 1,
                 '_id': 0
             }
@@ -75,9 +75,9 @@ class AppUser:
             },
             {
                 'email': 1,
-                'password_hash': 1,
-                'first_name': 1,
-                'last_name': 1,
+                'passwordHash': 1,
+                'firstName': 1,
+                'lastName': 1,
                 'role': 1,
                 '_id': 0
             }
@@ -85,26 +85,26 @@ class AppUser:
         return doc
 
     @staticmethod
-    def update(email, password_hash, first_name, last_name, role):
+    def update(email, passwordHash, firstName, lastName, role):
         """
         Updates properties of a user with the given email
 
         :param string email: User e-mail
-        :param string password_hash: User password hash. If empty does not update it
-        :param string first_name: User first name
-        :param string last_name: User last name
+        :param string passwordHash: User password hash. If empty does not update it
+        :param string firstName: User first name
+        :param string lastName: User last name
         :param string role: ADMIN or USER
         :return: None if user not found or dictionary with the user e-mail otherwise
         """
         update_dict = \
             {
-                'updated_on': datetime.datetime.utcnow(),
-                'first_name': first_name,
-                'last_name': last_name,
+                'updatedOn': datetime.datetime.utcnow(),
+                'firstName': firstName,
+                'lastName': lastName,
                 'role': role
             }
-        if password_hash != None:
-            update_dict['password_hash'] = password_hash
+        if passwordHash != None:
+            update_dict['passwordHash'] = passwordHash
 
         doc = MongoUtil.user_collection().update_one(
             {

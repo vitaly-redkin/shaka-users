@@ -8,4 +8,5 @@
 export enum AppRoutes {
   Home = '/',
   Admin = '/admin/',
+  Login = '/login/'
 }

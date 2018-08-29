@@ -4,13 +4,13 @@
 
 import * as React from 'react';
 import { connect } from 'react-redux';
-import { RouteComponentProps, withRouter, NavLink } from 'react-router-dom';
-import { Navbar, NavbarBrand, Nav, NavbarToggler, Collapse  } from 'reactstrap';
+import { RouteComponentProps, withRouter, NavLink, Redirect } from 'react-router-dom';
+import { Navbar, NavbarBrand, Nav, NavbarToggler, Collapse, NavLink as Link } from 'reactstrap';
 
-import { actionCreators } from '../../store/UserHandler';
+import { actionCreators } from '../../store/.';
 import { IApplicationState } from '../../store';
 import { AppRoutes } from '../../util/AppRoutes';
-import { UserModel } from '../../model/UserModel';
+import { UserModel, RoleEnum  } from '../../model/UserModel';
 
 import './AppHeader.css';
 import logo from '../../img/logo.png';
@@ -48,6 +48,17 @@ class AppHeader extends React.Component<AppHeaderProps, IAppHeaderState> {
    * Rendering method.
    */
   public render() {
+    const isLoggedIn: boolean = (this.props.loggedUser !== undefined);
+    const onLoginPage: boolean = (this.props.location.pathname === AppRoutes.Login);
+    if (!isLoggedIn && !onLoginPage) {
+      return <Redirect to={AppRoutes.Login} />;
+    }
+
+    const isAdmin: boolean = 
+      (this.props.loggedUser !== undefined && this.props.loggedUser.role === RoleEnum.Admin);
+    const greeting: string = (
+      this.props.loggedUser !== undefined ? `Hi ${this.props.loggedUser.firstName}!` : '');
+
     return (
       <Navbar color='dark' dark={true} expand='md'>
         <NavbarBrand className='app-header-brand'>
@@ -57,23 +68,33 @@ class AppHeader extends React.Component<AppHeaderProps, IAppHeaderState> {
             <h6 className='app-header-title ml-4'>Front-End Test Task</h6>
           </span>
         </NavbarBrand>
-        <Nav className='app-header-menu'>
+        {!onLoginPage && 
+        <Nav className='app-header-menu w-100'>
           <NavbarToggler onClick={this.toggle} />
           <Collapse isOpen={this.state.isOpen} navbar={true}>
             <NavLink to={AppRoutes.Home} className='nav-link' activeClassName='app-header-active-link' exact={true}>
               Home
             </NavLink>
+            {isAdmin &&
             <NavLink to={AppRoutes.Admin} className='nav-link' activeClassName='app-header-active-link' exact={true}>
               Admin
             </NavLink>
+            }
+            <Nav className='justify-content-end w-100'>
+              <h5 className='app_header_greeting mr-4 mb-0'>{greeting}</h5>
+              <Link onClick={this.logout} href='\' className='nav-link'>
+                Logout
+              </Link>
+            </Nav>
           </Collapse>
         </Nav>
+        }
       </Navbar>
     );
   }
 
   /**
-   * Toggles NavBar meni collapser.
+   * Toggles NavBar menu collapser.
    */
   private toggle = (): void => {
     this.setState({
@@ -81,6 +102,18 @@ class AppHeader extends React.Component<AppHeaderProps, IAppHeaderState> {
     });
   }
   
+  /**
+   * Logs user out.
+   */
+  private logout = (e: React.MouseEvent): void => {
+    e.preventDefault();
+
+    // TO DO: call logout API
+    this.props.clearUser();
+    this.props.clearAuthTokens();
+    
+    this.props.history.push(AppRoutes.Login);
+  }
 }
 
 // Redux mapStateToProps function

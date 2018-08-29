@@ -22,6 +22,19 @@ export const initialState: IApplicationState = {
 };
 
 /**
+ * ACTION CREATORS.
+ * These are functions exposed to UI components that will trigger a state transition.
+ */
+export const actionCreators = {
+  setUser: UserHandler.actionCreators.setUser,
+  clearUser: UserHandler.actionCreators.clearUser,
+
+  setAuthTokens: AuthTokenHandler.actionCreators.setAuthTokens,
+  refreshAuthTokens: AuthTokenHandler.actionCreators.refreshAuthTokens,
+  clearAuthTokens: AuthTokenHandler.actionCreators.clearAuthTokens,
+};
+
+/**
  * Application reducers.
  */
 export const reducers = {

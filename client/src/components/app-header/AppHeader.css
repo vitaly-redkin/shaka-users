@@ -21,15 +21,11 @@
     color: white;
 }
 
-.app-header-right
+.app_header_greeting
 {
-    width: 240px;
-}
-
-.app-header-right div
-{
-    text-align: right;
-    width: 100%;
+    color: white;
+    color: #fc5d51;
+    margin-top: 12px;
 }
 
 .nav-link
