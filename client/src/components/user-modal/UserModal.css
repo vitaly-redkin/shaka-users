@@ -1,18 +1,13 @@
 .user-modal
 {
-  max-width: 400px!important;
+  max-width: 450px!important;
 }
 
-.user-modal input
+.user-modal input :not.select
 {
   border: 1px solid #cccccc;
   padding: 2px;
   font-weight: bold;
-}
-
-.user-modal input:invalid
-{
-  box-shadow: 0 0 5px 1px red
 }
 
 div.modal-footer
@@ -28,4 +23,17 @@ div.modal-header
 button.user-modal-button
 {
   width: 80px;
+}
+
+.user-modal-select
+{
+  width: calc(100% + 0.4rem);
+  margin-left: -0.4rem;
+  height: 30px;
+}
+
+.user-modal-password-note
+{
+  font-size: smaller;
+  color: #888888;
 }

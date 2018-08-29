@@ -115,6 +115,61 @@ export class UserService {
     }
 
     /**
+     * Creates or updaets the user.
+     * 
+     * @param user User data
+     * @param isNewUser true if new user is to be created
+     * @param authTokens Authentication tokens
+     * @param onSuccess function to call on success
+     * @param onError function to call on error
+     */
+    public saveUser(
+        user: UserModel,
+        isNewUser: boolean,
+        authTokens: AuthTokenModel,
+        onSuccess: Function,
+        onError: Function
+    ): void {
+        const method = (isNewUser ? 'POST' : 'PUT');
+        const data: UserModel = user;
+        const param: string = (!isNewUser ? `/${user.email}` : '');
+        const endpoint: string = `/users${param}`;
+        this.callApi<UserModel, UserModel>(
+            endpoint,
+            method,
+            data,
+            authTokens,
+            onSuccess,
+            onError
+        );
+    }
+
+    /**
+     * Returns the user list.
+     * 
+     * @param authTokens Authentication tokens
+     * @param onSuccess function to call on success
+     * @param onError function to call on error
+     */
+    public deleteUser(
+        email: string,
+        authTokens: AuthTokenModel,
+        onSuccess: Function,
+        onError: Function
+    ): void {
+        const param: string = `/${email}`;
+        const endpoint: string = `/users${param}`;
+        this.callApi<IEmptyPayload, IUserDeleteResult>(
+            endpoint,
+            'DELETE',
+            null,
+            authTokens,
+            onSuccess,
+            onError
+        );
+    }
+
+    /**
      * Calls a specified API endpoint.
      * 
      * @param endpoint API endpoint to call
@@ -245,6 +300,13 @@ interface IRegisterPayload {
     password: string;
     firstName: string;
     lastName: string;
+}
+
+/**
+ * Interface for user delete results.
+ */
+export interface IUserDeleteResult {
+    email: string;
 }
 
 /**

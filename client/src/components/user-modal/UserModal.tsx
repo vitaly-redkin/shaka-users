@@ -1,73 +1,105 @@
 /**
- * The Transaction Msodal component.
+ * The User Modal component.
  */
 
 import * as React from 'react';
 import { Modal, ModalHeader, ModalBody, ModalFooter,  Row, Col, Button } from 'reactstrap';
 
-import { Settings } from '../../model/Settings';
-import { CurrencyInfo } from '../../model/CurrencyInfo';
-import { ITransaction } from '../../model/CurrencyManager';
-import { asFloat, formatAmount, formatRate } from '../../util/Util';
+import { UserModel, RoleEnum } from '../../model/UserModel';
 
-import './TransactionModal.css';
+import './UserModal.css';
 
 // Component own properties interface
-interface ITransactionModalProps {
-    transactionCurrencyInfo: CurrencyInfo;
-    baseCurrencyInfo: CurrencyInfo;
-    settings: Settings;
-    direction: number;
+interface IUserModalProps {
+    user: UserModel;
+    isNewUser: boolean;
     isOpen: boolean;
     toggler: Function;
-    processTransaction: Function;
+    saveUser: Function;
+    deleteUser: Function;
 }
 
-// Component own state interface
-interface ITransactionModalState {
-  amount: number;
+// Component own state class
+class UserModalState {
+  public email: string;
+  public password: string;
+  public password2: string;
+  public firstName: string;
+  public lastName: string;
+  public role: RoleEnum;
 }
 
-class TransactionModal extends React.PureComponent<ITransactionModalProps, ITransactionModalState> {
+class UserModal extends React.PureComponent<IUserModalProps, UserModalState> {
   private formElement: HTMLFormElement;
-  private amountInputElement: HTMLInputElement;
-
+  
   /**
    * Constructor.
+   * Sets initial state.
    * 
    * @param props Component properties.
    */
-  constructor(props: ITransactionModalProps) {
+  constructor(props: IUserModalProps) {
     super(props);
-    this.state = {amount: 0};
+
+    const state: UserModalState = this.convertPropsToState(props);
+    this.state = {...state};
   }
 
-  /**
-   * Called when component properties are updated.
-   * 
-   * @param prevProps previos component properties
-   */
-  public componentDidUpdate(prevProps: ITransactionModalProps): void {
-    if (this.props.isOpen) {
-      this.amountInputElement.focus();
-    }
+  public componentWillReceiveProps(newProps: IUserModalProps): void {
+    const state: UserModalState = this.convertPropsToState(newProps);
+    this.setState({...state});
   }
 
   /**
    * Rendering method.
    */
   public render(): JSX.Element {
-    const p: ITransactionModalProps = this.props;
-    const c = p.transactionCurrencyInfo;
-    const s: Settings = p.settings;
-    const t: ITransaction = this.composeTransaction();
+    const isNew: boolean = this.props.isNewUser;
+
+    const passwordGroup: JSX.Element = (
+      <React.Fragment>
+        {!isNew && (
+          <Row>
+            <Col colSpan={2}>
+              <hr/>
+            </Col>
+          </Row>
+        )
+        }
+        <Row>
+          <Col>
+            <label htmlFor='password'>Password:</label>
+          </Col>
+          <Col>
+            <input type='password' id='password' required={isNew}
+              onChange={(e): void => { this.onInputChange('password', e); }} />
+          </Col>
+        </Row>
+        <Row>
+          <Col>
+            <label htmlFor='password2'>Repeat password:</label>
+          </Col>
+          <Col>
+            <input type='password' id='password2' required={isNew}
+              onChange={(e): void => { this.onInputChange('password2', e); }} />
+          </Col>
+        </Row>
+        {!isNew && (
+          <Row>
+            <Col colSpan={2} className='user-modal-password-note text-center mt-2'>
+              Set passwords only if you want to change them
+            </Col>
+          </Row>
+        )
+        }
+      </React.Fragment>
+    );
 
     return (
       <Modal 
-        isOpen={p.isOpen} 
-        fade={false} 
+        isOpen={this.props.isOpen} 
         toggle={this.toggler} 
-        className='transaction-modal'
+        className='user-modal'
         centered={true}
         autoFocus={true}
       >
@@ -77,76 +109,71 @@ class TransactionModal extends React.PureComponent<ITransactionModalProps, ITran
           </ModalHeader>
 
           <ModalBody>
-            <Row className='transaction-total-row'>
+            <Row>
               <Col>
-                <label htmlFor='amountInput'>{this.amountLabel}:</label>
+                <label htmlFor='email'>E-mail:</label>
               </Col>
-              <Col className='text-right'>
-                <input
-                  id='surchargeInput'
-                  className='mr-2'
-                  type='number'
-                  ref={this.setAmountInputRef}
-                  onChange={this.onAmountChange}
-                  min={1}
-                  max={this.maxAmount}
-                  step={0.01}
-                  required={true}
-                  />
-                  {c.currency}
+              <Col>
+                <input type='email' id='email' required={true} disabled={!isNew}
+                  defaultValue={this.props.user.email}
+                  onChange={(e): void => { this.onInputChange('email', e); }} />
               </Col>
             </Row>
-
-            <Row><Col colSpan={2}><hr/></Col></Row>
-
+            {isNew && passwordGroup}
             <Row>
-              <Col>Exchange Rate:</Col>
-              <Col className='text-right'>
-                1.00&nbsp;{c.currency}
-                &nbsp;=&nbsp;
-                {formatRate(t.rate)}
-                &nbsp;
-                {s.baseCurrency}
+              <Col>
+                <label htmlFor='firstName'>First name:</label>
+              </Col>
+              <Col>
+                <input type='text' id='firstName' required={true}
+                  defaultValue={this.props.user.firstName}
+                  onChange={(e): void => { this.onInputChange('firstName', e); }} />
               </Col>
             </Row>
             <Row>
-              <Col>Subtotal:</Col>
-              <Col className='text-right'>
-                {formatAmount(t.subtotal)}
-                &nbsp;
-                {s.baseCurrency}
+              <Col>
+                <label htmlFor='lastName'>Last name:</label>
+              </Col>
+              <Col>
+                <input type='text' id='lastName' required={true}
+                  defaultValue={this.props.user.lastName}
+                  onChange={(e): void => { this.onInputChange('lastName', e); }} />
               </Col>
             </Row>
-
             <Row>
-              <Col>Commission:</Col>
-              <Col className='text-right'>
-                {formatAmount(t.commission)}
-                &nbsp;
-                {s.baseCurrency}
+              <Col>
+                <label htmlFor='role'>Role:</label>
+              </Col>
+              <Col>
+                <select id='role' className='user-modal-select' required={true} 
+                  defaultValue={this.props.user.role}
+                  onChange={(e): void => { this.onInputChange('role', e); }}
+                >
+                  <option value={RoleEnum.Admin}>{RoleEnum.Admin}</option>
+                  <option value={RoleEnum.User}>{RoleEnum.User}</option>
+                </select>
               </Col>
             </Row>
-
-            <Row><Col colSpan={2}><hr/></Col></Row>
-
-            <Row className='transaction-total-row'>
-              <Col>Total:</Col>
-              <Col className='text-right'>
-                {formatAmount(t.total)}
-                &nbsp;
-                {s.baseCurrency}
-              </Col>
-            </Row>
+            {!isNew && passwordGroup}
           </ModalBody>
 
           <ModalFooter>
-            <Button color='secondary' onClick={this.toggler} className='transaction-button'>
+            <Button color='secondary' onClick={this.toggler} className='user-modal-button'>
               Cancel
             </Button>
+            {!isNew && 
+            <Button 
+              type='button'
+              color='danger' 
+              className='user-modal-button'
+              onClick={this.onDelete}>
+              Delete
+            </Button>
+            }
             <Button 
               type='submit'
               color='primary' 
-              className='transaction-button'
+              className='user-modal-button'
               onClick={this.onSubmit} 
               disabled={!this.isFormValid()}>
               {this.submitButtonCaption}
@@ -161,57 +188,41 @@ class TransactionModal extends React.PureComponent<ITransactionModalProps, ITran
    * Modal title.
    */
   private get title(): string {
-    return `${this.props.direction === 1 ? 'Buy' : 'Sell'} ${this.props.transactionCurrencyInfo.currency}`;
-  }
-
-  /**
-   * Label for the amount input.
-   */
-  private get amountLabel(): string {
-    return `Amount to ${this.props.direction === 1 ? 'buy' : 'sell'}`;
+    return (this.props.isNewUser ? 'Create New User' : 'Edit User');
   }
 
   /**
    * Caption for the submit button.
    */
   private get submitButtonCaption(): string {
-    return (this.props.direction === 1 ? 'Buy' : 'Sell');
+    return (this.props.isNewUser ? 'Create' : 'Save');
   }
 
   /**
-   * Returns maximal currency amount to buy/sell.
-   */
-  private get maxAmount(): number {
-    if (this.props.direction === 1) {
-      return Math.floor(
-        this.props.baseCurrencyInfo.amount / this.props.transactionCurrencyInfo.buyRate);
-    } else {
-      return this.props.transactionCurrencyInfo.amount;
-    }
-  }
-
-  /**
-   * Handles amount change event,
+   * Sets state property with the input current value.
    * 
-   * @param e Event agruments
+   * @param propName Name of the state property to set
+   * @param e Event arguments to extract the value from
    */
-  private onAmountChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
-    const amount: number = Math.floor(asFloat(e) * 100) / 100;
-    if (amount >= 0) {
-      this.setState({amount: amount});
-    }
+  private onInputChange(
+    propName: string, 
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) {
+    const value: string = e.target.value.trim();
+    const newState: UserModalState = {...this.state};
+    newState[propName] = value;
+    this.setState(newState);
   }
 
   /**
    * Toggles modal.
    */
   private toggler = (): void => {
-    this.setState({amount: 0});
     this.props.toggler();
   }
 
   /**
-   * Submit updates settings.
+   * Submit user.
    */
   private onSubmit = (e: React.FormEvent): void => {
     e.preventDefault();
@@ -219,8 +230,23 @@ class TransactionModal extends React.PureComponent<ITransactionModalProps, ITran
       return;
     }
 
-    const t: ITransaction = this.composeTransaction();
-    this.props.processTransaction(t);
+    const user: UserModel = new UserModel(
+      this.state.email,
+      this.state.password,
+      this.state.firstName,
+      this.state.lastName,
+      this.state.role
+    );
+    this.props.saveUser(user, this.props.isNewUser);
+    this.props.toggler();
+  }
+
+  /**
+   * Deletes user.
+   */
+  private onDelete = (e: React.FormEvent): void => {
+    e.preventDefault();
+    this.props.deleteUser(this.props.user.email);
     this.props.toggler();
   }
 
@@ -232,53 +258,31 @@ class TransactionModal extends React.PureComponent<ITransactionModalProps, ITran
   }
 
   /**
-   * Sets reference to the amount input element.
-   */
-  private setAmountInputRef = (ref: HTMLInputElement): void => {
-    this.amountInputElement = ref;
-  }
-
-  /**
    * Returns true if the form is valid.
    */
   private isFormValid = (): boolean => {
-    const isHtmlValid: boolean = (!this.formElement || this.formElement.checkValidity());
-    
-    const t: ITransaction = this.composeTransaction();
-    const isAmountValid: boolean = 
-      (t.amount >= 1 && t.amount <= this.maxAmount && t.total > 0);
-
-    return (isHtmlValid && isAmountValid);
+    return (
+      (!this.formElement || this.formElement.checkValidity()) &&
+      (this.state.password === this.state.password2)
+    );
   }
 
   /**
-   * Composes transaction description object.
+   * Converts props to state.
+   * 
+   * @param props Component properties to convert into state
+   * @returns state derived from properties
    */
-  private composeTransaction = (): ITransaction => {
-    const amount: number = this.state.amount;
-    const p: ITransactionModalProps = this.props;
-    const c = p.transactionCurrencyInfo;
-    const s: Settings = p.settings;
-    const rate: number = (p.direction === 1 ? c.buyRate : c.sellRate);
-    const subtotal: number = Math.round(amount * rate * 100) / 100;
-    const commission: number = Math.round(Math.max(
-      s.surcharge + subtotal * s.commissionPct / 100,
-      s.minCommission
-    ) * 100) / 100;
-    const total: number = subtotal - p.direction * commission;
-
+  private convertPropsToState = (props: IUserModalProps): UserModalState => {
     return {
-      transactionCurrency: c.currency,
-      baseCurrency: p.baseCurrencyInfo.currency,
-      direction: p.direction,
-      rate: rate,
-      amount: amount,
-      subtotal: subtotal,
-      commission: commission,
-      total: total
+      email: props.user.email,
+      password: '',
+      password2: '',
+      firstName: props.user.firstName,
+      lastName: props.user.lastName,
+      role: props.user.role,
     };
   }
 }
 
-// Redux-Wrapped component
-export default TransactionModal;
+export default UserModal;

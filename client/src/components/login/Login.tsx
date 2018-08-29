@@ -190,9 +190,9 @@ class Login extends React.Component<LoginProps, LoginState> {
                   }
                   </Col>
               </Row>
-              <Row className='mt-4'>
-                <Col>
-                  *Note: The very first registered user will be assigned admin rights automatically - so move fast!
+              <Row className='mt-2'>
+                <Col className='login-note text-center'>
+                  The very first registered user will be assigned admin rights automatically - so move fast!
                 </Col>
               </Row>
             </form>
@@ -204,7 +204,7 @@ class Login extends React.Component<LoginProps, LoginState> {
   }
 
   /**
-   * Sets state property with the input current calue.
+   * Sets state property with the input current value.
    * 
    * @param propName Name of the state property to set
    * @param e Event arguments to extract the value from

@@ -5,8 +5,8 @@
   font-weight: bold;
 }
 
-.login-container input:invalid
+.login-note
 {
-  box-shadow: 0 0 5px 1px red
+  font-size: smaller;
+  color: #888888;
 }
-

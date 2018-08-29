@@ -69,7 +69,7 @@ def _generate_hash(password):
     :param string password: password to generate the hash for
     :return: password hash
     """
-    return sha256.hash(password)
+    return None if password is None or password == '' else sha256.hash(password)
 
 
 def _verify_hash(password, password_hash):
@@ -286,9 +286,10 @@ class Users(Resource):
             lastName = dict_get(json_data, 'lastName')
             role = dict_get(json_data, 'role')
 
-            AppUser.create(email, passwordHash, firstName, lastName, role)
-
-            return _ok()
+            result = AppUser.create(email, passwordHash, firstName, lastName, role)
+            if result is not None:
+                del result['passwordHash']
+            return result
         except Exception as e:
             return _error('Error during creating a new user: %s' % e), 500
 
@@ -309,7 +310,7 @@ class User(Resource):
         """
         result = AppUser.get_by_email(email)
         if result is not None:
-            del result['password_hash']
+            del result['passwordHash']
         return self._check(result, email)
 
     @jwt_required
@@ -318,7 +319,7 @@ class User(Resource):
         """
         Updates user
 
-        :return: success or error dictionary
+        :return: updated user or error dictionary
         """
         try:
             json_data = request.get_json(force=True)
@@ -330,7 +331,8 @@ class User(Resource):
             role = dict_get(json_data, 'role')
 
             result = AppUser.update(email, passwordHash, firstName, lastName, role)
-
+            if result is not None:
+                del result['passwordHash']
             return self._check(result, email)
         except Exception as e:
             return _error('Error during updating user: %s' % e), 500
@@ -341,7 +343,7 @@ class User(Resource):
         """
         Deletes user
 
-        :return: success or error dictionary
+        :return: user e-mail or error dictionary
         """
         try:
             result = AppUser.delete(email)

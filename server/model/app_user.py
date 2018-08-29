@@ -1,6 +1,26 @@
 import datetime
+import pymongo
 
 from .mongo_util import MongoUtil
+
+# Fields to return from single user
+_user_fields = {
+    'email': 1,
+    'passwordHash': 1,
+    'firstName': 1,
+    'lastName': 1,
+    'role': 1,
+    '_id': 0
+}
+
+# Fields to return for user list
+_user_fields_for_list = {
+    'email': 1,
+    'firstName': 1,
+    'lastName': 1,
+    'role': 1,
+    '_id': 0
+}
 
 
 class AppUser:
@@ -44,13 +64,7 @@ class AppUser:
         cursor = MongoUtil.user_collection().find(
             {
             },
-            {
-                'email': 1,
-                'firstName': 1,
-                'lastName': 1,
-                'role': 1,
-                '_id': 0
-            }
+            _user_fields_for_list
         )
         return list(cursor)
 
@@ -75,14 +89,7 @@ class AppUser:
             {
                 '_id': email
             },
-            {
-                'email': 1,
-                'passwordHash': 1,
-                'firstName': 1,
-                'lastName': 1,
-                'role': 1,
-                '_id': 0
-            }
+            _user_fields
         )
         return doc
 
@@ -96,7 +103,7 @@ class AppUser:
         :param string firstName: User first name
         :param string lastName: User last name
         :param string role: ADMIN or USER
-        :return: None if user not found or dictionary with the user e-mail otherwise
+        :return: None if user not found or dictionary with the user properties otherwise
         """
         update_dict = \
             {
@@ -108,15 +115,17 @@ class AppUser:
         if passwordHash != None:
             update_dict['passwordHash'] = passwordHash
 
-        doc = MongoUtil.user_collection().update_one(
+        doc = MongoUtil.user_collection().find_one_and_update(
             {
                 '_id': email
             },
             {
                 '$set': update_dict
-            }
+            },
+            projection=_user_fields,
+            return_document=pymongo.ReturnDocument.AFTER
         )
-        return None if doc is None or doc.matched_count == 0 else {'success': True}
+        return doc
 
     @staticmethod
     def delete(email):
@@ -131,4 +140,4 @@ class AppUser:
                 '_id': email
             }
         )
-        return None if doc is None or doc.deleted_count == 0 else {'success': True}
+        return None if doc is None or doc.deleted_count == 0 else {'email': email}

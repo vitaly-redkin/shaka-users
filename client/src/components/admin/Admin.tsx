@@ -12,7 +12,7 @@ import { Column } from 'primereact/column';
 import { IApplicationState } from '../../store';
 import { UserModel } from '../../model/UserModel';
 import { AuthTokenModel } from '../../model/AuthTokenModel';
-import { UserService } from '../../service/UserService';
+import { UserService, IUserDeleteResult } from '../../service/UserService';
 import UserModal from '../user-modal/UserModal';
 
 import './Admin.css';
@@ -30,6 +30,7 @@ interface IAdminState {
   isLoading: boolean;
   isUserModalOpen: boolean;
   isNewUser: boolean;
+  selectedUser: UserModel | undefined;
   editedUser: UserModel;
 }
 
@@ -51,6 +52,7 @@ class Admin extends React.PureComponent<IAdminOwnProps, IAdminState> {
       isLoading: true,
       isUserModalOpen: false,
       isNewUser: false,
+      selectedUser: undefined,
       editedUser: new UserModel(),
     };
   }
@@ -110,30 +112,27 @@ class Admin extends React.PureComponent<IAdminOwnProps, IAdminState> {
     );    
 
     return (
-      <DataTable value={this.state.users} paginator={true} rows={5} footer={footer}>
+      <React.Fragment>
+        <DataTable value={this.state.users} paginator={true} rows={10} footer={footer}
+          selectionMode='single' selection={this.state.selectedUser} 
+          onSelectionChange={this.setSelectedUser}
+          onRowSelect={this.editUser}
+        >
           <Column field='email' header='E-mail' filter={true} sortable={true} />
           <Column field='firstName' header='First Name' filter={true} sortable={true} />
           <Column field='lastName' header='Last Name' filter={true} sortable={true} />
           <Column field='role' header='Role' filter={true} sortable={true} />
-      </DataTable>
+        </DataTable>
 
-      {this.renderEditDialog()}
-    );
-  }
-
-  /**
-   * Renders user edit dialog.
-   */
-  private renderEditDialog(): JSX.Element {
-    return (
-      <UserModal 
-        user={this.state.editedUser} 
-        isNew={this.state.isNewUser}
-        isOpen={this.state.isUserModalOpen}
-        toggler={this.toggleUserModal}
-        saveUser={this.saveUser}
-        deleteUser={this.deleteUser}
-      />
+        <UserModal 
+          user={this.state.editedUser} 
+          isNewUser={this.state.isNewUser}
+          isOpen={this.state.isUserModalOpen}
+          toggler={this.toggleUserModal}
+          saveUser={this.saveUser}
+          deleteUser={this.deleteUser}
+        />
+      </React.Fragment>
     );
   }
 
@@ -172,7 +171,6 @@ class Admin extends React.PureComponent<IAdminOwnProps, IAdminState> {
     }
   }
 
-
   /**
    * Toggles user modal.
    */
@@ -183,6 +181,16 @@ class Admin extends React.PureComponent<IAdminOwnProps, IAdminState> {
   }  
 
   /**
+   * Sets selected user.
+   */
+  private setSelectedUser = (e: object): void => {
+    this.setState({
+      //tslint:disable
+      selectedUser: e['data']
+      //tslint:enable
+    });
+  }
+  /**
    * Adds new user.
    */
   private addNewUser = (): void => {
@@ -191,6 +199,87 @@ class Admin extends React.PureComponent<IAdminOwnProps, IAdminState> {
       isNewUser: true,
       editedUser: new UserModel()
     });
+  }
+
+  /**
+   * Edits existing user.
+   */
+  private editUser = (e: object): void => {
+    //tslint:disable
+    const user: UserModel = {...e['data'], password: ''};
+    //tslint:enable
+    this.setState({
+      isUserModalOpen: true,
+      isNewUser: false,
+      editedUser: user 
+    });
+  }
+
+  /**
+   * Saves user.
+   * 
+   * @param user User properties
+   * @param isNewUser true if this is a new user to create
+   */
+  private saveUser = (user: UserModel, isNewUser: boolean): void => {
+    new UserService().saveUser(
+      user,
+      isNewUser,
+      this.props.authTokens,
+      this.onSaveUserSuccess,
+      this.onServiceCallError
+    );
+  }
+
+  /**
+   * Deletes user.
+   * 
+   * @param email E-mail of the user to delete
+   */
+  private deleteUser = (email: string): void => {
+    new UserService().deleteUser(
+      email,
+      this.props.authTokens,
+      this.onDeleteUserSuccess,
+      this.onServiceCallError
+    );
+  }
+
+  /**
+   * Handler for the user save success event.
+   * 
+   * @param user User details
+   */
+  private onSaveUserSuccess = (user: UserModel): void => {
+    const users: UserModel[] = this.state.users!;
+    const isNewUser: boolean = (users.findIndex((u: UserModel) => u.email === user.email) < 0);
+    const newUsers: UserModel[] = (
+      isNewUser ? 
+      users.concat(user) :
+      users.map((u: UserModel) => (u.email === user.email ? user : u))
+    );
+    this.setState({users: newUsers});
+  }
+
+  /**
+   * Handler for the user delete success event.
+   * 
+   * @param result Object with email of deleted user
+   */
+  private onDeleteUserSuccess = (result: IUserDeleteResult): void => {
+    const newUsers: UserModel[] = this.state.users!.filter(
+      (u: UserModel) => u.email !== result.email);
+    this.setState({users: newUsers});
+  }
+
+  /**
+   * Handler for the service call error event.
+   * 
+   * @param error Error to handle
+   */
+  private onServiceCallError = (error: Error): void => {
+    console.log(error);
+    alert('Error occurred - check console for details');
   }
 }
 
