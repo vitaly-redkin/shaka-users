@@ -132,7 +132,7 @@ export class UserService {
     ): void {
         const method = (isNewUser ? 'POST' : 'PUT');
         const data: UserModel = user;
-        const param: string = (!isNewUser ? `/${user.email}` : '');
+        const param: string = (!isNewUser ? `/${encodeURIComponent(user.email)}` : '');
         const endpoint: string = `/users${param}`;
         this.callApi<UserModel, UserModel>(
             endpoint,
@@ -157,7 +157,7 @@ export class UserService {
         onSuccess: Function,
         onError: Function
     ): void {
-        const param: string = `/${email}`;
+        const param: string = `/${encodeURIComponent(email)}`;
         const endpoint: string = `/users${param}`;
         this.callApi<IEmptyPayload, IUserDeleteResult>(
             endpoint,
