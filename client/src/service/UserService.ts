@@ -73,7 +73,7 @@ export class UserService {
         onSuccess: Function,
         onError: Function
     ): void {
-        this.callApi<ILoginPayload, ILoginResult>(
+        this.callApi<IEmptyPayload, IEmptyResult>(
             '/logout/access',
             'POST',
             null,
@@ -82,7 +82,7 @@ export class UserService {
             onError
         );
 
-        this.callApi<ILoginPayload, ILoginResult>(
+        this.callApi<IEmptyPayload, IEmptyResult>(
             '/logout/refresh',
             'POST',
             null,
@@ -92,20 +92,26 @@ export class UserService {
         );
     }
 
-    //tslint:disable
-    private addAuthHeaders(
-        authTokens: AuthTokenModel | string | null,
-        headers: any
-    ): any {
-        //tslint:enable
-        if (authTokens === null) {
-            return headers;
-        } else {
-            const token: string = 
-                (typeof authTokens === 'string' ? authTokens : authTokens.refreshToken);
-
-            return {...headers, Authorization: `Bearer ${token}`};
-        }
+    /**
+     * Returns the user list.
+     * 
+     * @param authTokens Authentication tokens
+     * @param onSuccess function to call on success
+     * @param onError function to call on error
+     */
+    public getUserList(
+        authTokens: AuthTokenModel,
+        onSuccess: Function,
+        onError: Function
+    ): void {
+        this.callApi<IEmptyPayload, UserModel[]>(
+            '/users',
+            'GET',
+            null,
+            authTokens,
+            onSuccess,
+            onError
+        );
     }
 
     /**
@@ -179,6 +185,22 @@ export class UserService {
         }
     }
 
+    //tslint:disable
+    private addAuthHeaders(
+        authTokens: AuthTokenModel | string | null,
+        headers: any
+    ): any {
+        //tslint:enable
+        if (authTokens === null) {
+            return headers;
+        } else {
+            const token: string = 
+                (typeof authTokens === 'string' ? authTokens : authTokens.accessToken);
+
+            return {...headers, Authorization: `Bearer ${token}`};
+        }
+    }
+
     /**
      * Returns API host to add to the endpoint names.
      */
@@ -186,6 +208,18 @@ export class UserService {
         return process.env.REACT_APP_API_HOST!;
     }
 }  
+
+/**
+ * Interface for the empty payload.
+ */
+interface IEmptyPayload {
+}
+
+/**
+ * Interface for the empty result.
+ */
+interface IEmptyResult {
+}
 
 /**
  * Interface for the login payload objects.

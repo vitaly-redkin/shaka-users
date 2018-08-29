@@ -1,3 +1,12 @@
-.login-container
+.login-container input
 {
+  border: 1px solid #cccccc;
+  padding: 2px;
+  font-weight: bold;
 }
+
+.login-container input:invalid
+{
+  box-shadow: 0 0 5px 1px red
+}
+

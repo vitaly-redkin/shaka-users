@@ -1,0 +1,31 @@
+.user-modal
+{
+  max-width: 400px!important;
+}
+
+.user-modal input
+{
+  border: 1px solid #cccccc;
+  padding: 2px;
+  font-weight: bold;
+}
+
+.user-modal input:invalid
+{
+  box-shadow: 0 0 5px 1px red
+}
+
+div.modal-footer
+{
+  border-top-color: rgba(0,0,0,.4) !important;
+}
+
+div.modal-header
+{
+  border-bottom-color: rgba(0,0,0,.4) !important;
+}
+
+button.user-modal-button
+{
+  width: 80px;
+}

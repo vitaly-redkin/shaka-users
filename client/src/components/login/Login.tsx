@@ -69,7 +69,7 @@ class Login extends React.Component<LoginProps, LoginState> {
       <Container className='login-container mt-2'>
         <Row className='mb-4'>
           <Col>
-            <h2>Welcome to ShakaCode Test Task!</h2>
+            <h3>Welcome to ShakaCode Test Task!</h3>
             <h5 className='mt-4'>Please register (or login if you are already registered) first</h5>
             <hr/>
           </Col>
